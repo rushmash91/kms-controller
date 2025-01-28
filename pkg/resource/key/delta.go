@@ -109,6 +109,13 @@ func newResourceDelta(
 	if !ackcompare.MapStringStringEqual(ToACKTags(a.ko.Spec.Tags), ToACKTags(b.ko.Spec.Tags)) {
 		delta.Add("Spec.Tags", a.ko.Spec.Tags, b.ko.Spec.Tags)
 	}
+	if ackcompare.HasNilDifference(a.ko.Spec.XksKeyID, b.ko.Spec.XksKeyID) {
+		delta.Add("Spec.XksKeyID", a.ko.Spec.XksKeyID, b.ko.Spec.XksKeyID)
+	} else if a.ko.Spec.XksKeyID != nil && b.ko.Spec.XksKeyID != nil {
+		if *a.ko.Spec.XksKeyID != *b.ko.Spec.XksKeyID {
+			delta.Add("Spec.XksKeyID", a.ko.Spec.XksKeyID, b.ko.Spec.XksKeyID)
+		}
+	}
 
 	return delta
 }

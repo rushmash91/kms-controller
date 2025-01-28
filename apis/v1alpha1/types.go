@@ -51,10 +51,10 @@ type CustomKeyStoresListEntry struct {
 //
 // KMS applies the grant constraints only to cryptographic operations that support
 // an encryption context, that is, all cryptographic operations with a symmetric
-// encryption KMS key (https://docs.aws.amazon.com/kms/latest/developerguide/symm-asymm-concepts.html#symmetric-cmks).
+// KMS key (https://docs.aws.amazon.com/kms/latest/developerguide/symm-asymm-concepts.html#symmetric-cmks).
 // Grant constraints are not applied to operations that do not support an encryption
-// context, such as cryptographic operations with HMAC KMS keys or asymmetric
-// KMS keys, and management operations, such as DescribeKey or RetireGrant.
+// context, such as cryptographic operations with asymmetric KMS keys and management
+// operations, such as DescribeKey or RetireGrant.
 //
 // In a cryptographic operation, the encryption context in the decryption operation
 // must be an exact, case-sensitive match for the keys and values in the encryption
@@ -81,10 +81,10 @@ type GrantListEntry struct {
 	//
 	// KMS applies the grant constraints only to cryptographic operations that support
 	// an encryption context, that is, all cryptographic operations with a symmetric
-	// encryption KMS key (https://docs.aws.amazon.com/kms/latest/developerguide/symm-asymm-concepts.html#symmetric-cmks).
+	// KMS key (https://docs.aws.amazon.com/kms/latest/developerguide/symm-asymm-concepts.html#symmetric-cmks).
 	// Grant constraints are not applied to operations that do not support an encryption
-	// context, such as cryptographic operations with HMAC KMS keys or asymmetric
-	// KMS keys, and management operations, such as DescribeKey or RetireGrant.
+	// context, such as cryptographic operations with asymmetric KMS keys and management
+	// operations, such as DescribeKey or RetireGrant.
 	//
 	// In a cryptographic operation, the encryption context in the decryption operation
 	// must be an exact, case-sensitive match for the keys and values in the encryption
@@ -117,26 +117,27 @@ type KeyListEntry struct {
 
 // Contains metadata about a KMS key.
 //
-// This data type is used as a response element for the CreateKey and DescribeKey
-// operations.
+// This data type is used as a response element for the CreateKey, DescribeKey,
+// and ReplicateKey operations.
 type KeyMetadata struct {
-	AWSAccountID         *string      `json:"awsAccountID,omitempty"`
-	ARN                  *string      `json:"arn,omitempty"`
-	CloudHsmClusterID    *string      `json:"cloudHsmClusterID,omitempty"`
-	CreationDate         *metav1.Time `json:"creationDate,omitempty"`
-	CustomKeyStoreID     *string      `json:"customKeyStoreID,omitempty"`
-	DeletionDate         *metav1.Time `json:"deletionDate,omitempty"`
-	Description          *string      `json:"description,omitempty"`
-	Enabled              *bool        `json:"enabled,omitempty"`
-	EncryptionAlgorithms []*string    `json:"encryptionAlgorithms,omitempty"`
-	ExpirationModel      *string      `json:"expirationModel,omitempty"`
-	KeyID                *string      `json:"keyID,omitempty"`
-	KeyManager           *string      `json:"keyManager,omitempty"`
-	KeySpec              *string      `json:"keySpec,omitempty"`
-	KeyState             *string      `json:"keyState,omitempty"`
-	KeyUsage             *string      `json:"keyUsage,omitempty"`
-	MacAlgorithms        []*string    `json:"macAlgorithms,omitempty"`
-	MultiRegion          *bool        `json:"multiRegion,omitempty"`
+	AWSAccountID           *string      `json:"awsAccountID,omitempty"`
+	ARN                    *string      `json:"arn,omitempty"`
+	CloudHsmClusterID      *string      `json:"cloudHsmClusterID,omitempty"`
+	CreationDate           *metav1.Time `json:"creationDate,omitempty"`
+	CustomKeyStoreID       *string      `json:"customKeyStoreID,omitempty"`
+	DeletionDate           *metav1.Time `json:"deletionDate,omitempty"`
+	Description            *string      `json:"description,omitempty"`
+	Enabled                *bool        `json:"enabled,omitempty"`
+	EncryptionAlgorithms   []*string    `json:"encryptionAlgorithms,omitempty"`
+	ExpirationModel        *string      `json:"expirationModel,omitempty"`
+	KeyAgreementAlgorithms []*string    `json:"keyAgreementAlgorithms,omitempty"`
+	KeyID                  *string      `json:"keyID,omitempty"`
+	KeyManager             *string      `json:"keyManager,omitempty"`
+	KeySpec                *string      `json:"keySpec,omitempty"`
+	KeyState               *string      `json:"keyState,omitempty"`
+	KeyUsage               *string      `json:"keyUsage,omitempty"`
+	MacAlgorithms          []*string    `json:"macAlgorithms,omitempty"`
+	MultiRegion            *bool        `json:"multiRegion,omitempty"`
 	// Describes the configuration of this multi-Region key. This field appears
 	// only when the KMS key is a primary or replica of a multi-Region key.
 	//
@@ -146,6 +147,19 @@ type KeyMetadata struct {
 	PendingDeletionWindowInDays *int64                    `json:"pendingDeletionWindowInDays,omitempty"`
 	SigningAlgorithms           []*string                 `json:"signingAlgorithms,omitempty"`
 	ValidTo                     *metav1.Time              `json:"validTo,omitempty"`
+	// Information about the external key (https://docs.aws.amazon.com/kms/latest/developerguide/keystore-external.html#concept-external-key)that
+	// is associated with a KMS key in an external key store.
+	//
+	// This element appears in a CreateKey or DescribeKey response only for a KMS
+	// key in an external key store.
+	//
+	// The external key is a symmetric encryption key that is hosted by an external
+	// key manager outside of Amazon Web Services. When you use the KMS key in an
+	// external key store in a cryptographic operation, the cryptographic operation
+	// is performed in the external key manager using the specified external key.
+	// For more information, see External key (https://docs.aws.amazon.com/kms/latest/developerguide/keystore-external.html#concept-external-key)
+	// in the Key Management Service Developer Guide.
+	XksKeyConfiguration *XksKeyConfigurationType `json:"xksKeyConfiguration,omitempty"`
 }
 
 // Describes the configuration of this multi-Region key. This field appears
@@ -165,8 +179,17 @@ type MultiRegionKey struct {
 	Region *string `json:"region,omitempty"`
 }
 
+// Contains information about completed key material rotations.
+type RotationsListEntry struct {
+	KeyID        *string      `json:"keyID,omitempty"`
+	RotationDate *metav1.Time `json:"rotationDate,omitempty"`
+}
+
 // A key-value pair. A tag consists of a tag key and a tag value. Tag keys and
 // tag values are both required, but tag values can be empty (null) strings.
+//
+// Do not include confidential or sensitive information in this field. This
+// field may be displayed in plaintext in CloudTrail logs and other output.
 //
 // For information about the rules that apply to tag keys and tag values, see
 // User-Defined Tag Restrictions (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/allocation-tag-restrictions.html)
@@ -174,4 +197,20 @@ type MultiRegionKey struct {
 type Tag struct {
 	TagKey   *string `json:"tagKey,omitempty"`
 	TagValue *string `json:"tagValue,omitempty"`
+}
+
+// Information about the external key (https://docs.aws.amazon.com/kms/latest/developerguide/keystore-external.html#concept-external-key)that
+// is associated with a KMS key in an external key store.
+//
+// This element appears in a CreateKey or DescribeKey response only for a KMS
+// key in an external key store.
+//
+// The external key is a symmetric encryption key that is hosted by an external
+// key manager outside of Amazon Web Services. When you use the KMS key in an
+// external key store in a cryptographic operation, the cryptographic operation
+// is performed in the external key manager using the specified external key.
+// For more information, see External key (https://docs.aws.amazon.com/kms/latest/developerguide/keystore-external.html#concept-external-key)
+// in the Key Management Service Developer Guide.
+type XksKeyConfigurationType struct {
+	ID *string `json:"id,omitempty"`
 }
